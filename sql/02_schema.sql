@@ -1,14 +1,8 @@
--- ============================================================
--- Mini-projet GLPI CY Tech
--- Fichier : 02_schema.sql
 -- Objectif : création du schéma relationnel de la base cible
 -- Contenu : tables, clés primaires, clés étrangères, contraintes UNIQUE et CHECK
--- ============================================================
 
 
--- ============================================================
 -- 1. TABLES DE REFERENCE ET ORGANISATION
--- ============================================================
 
 CREATE TABLE SITE (
     id_site NUMBER GENERATED ALWAYS AS IDENTITY,
@@ -46,9 +40,7 @@ CREATE TABLE LOCALISATION (
 CLUSTER SITE_MATERIEL_LOCALISATION(id_site);
 
 
--- ============================================================
 -- 2. UTILISATEURS ET DROITS METIER
--- ============================================================
 
 CREATE TABLE UTILISATEUR (
     id_user NUMBER GENERATED ALWAYS AS IDENTITY,
@@ -92,9 +84,7 @@ CREATE TABLE USER_ROLE_SITE (
 ) TABLESPACE TS_CERGY_DATA;
 
 
--- ============================================================
 -- 3. MATERIELS ET AFFECTATIONS
--- ============================================================
 
 CREATE TABLE MATERIEL (
     id_materiel NUMBER GENERATED ALWAYS AS IDENTITY,

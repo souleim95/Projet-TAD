@@ -1,13 +1,7 @@
--- ============================================================
--- Mini-projet GLPI CY Tech
--- Fichier : 04_views.sql
 -- Objectif : création des vues métier pour simplifier les requêtes
--- ============================================================
 
 
--- ============================================================
 -- 1. Vue du parc matériel par site
--- ============================================================
 -- Cette vue permet de consulter rapidement le parc informatique
 -- avec le site, le responsable et la localisation du matériel.
 
@@ -38,9 +32,7 @@ LEFT JOIN LOCALISATION l
     ON m.id_localisation = l.id_localisation;
 
 
--- ============================================================
 -- 2. Vue des utilisateurs et de leurs rôles par site
--- ============================================================
 -- Cette vue permet de voir les droits métier affectés
 -- aux utilisateurs selon leur site.
 
@@ -67,9 +59,7 @@ JOIN SITE s
     ON urs.id_site = s.id_site;
 
 
--- ============================================================
 -- 3. Vue de l'historique des affectations
--- ============================================================
 -- Cette vue permet de suivre les changements d'affectation
 -- des matériels aux utilisateurs.
 
@@ -96,9 +86,7 @@ JOIN SITE s
     ON h.id_site = s.id_site;
 
 
--- ============================================================
 -- 4. Vue de la topologie réseau
--- ============================================================
 -- Cette vue donne une vision synthétique des interfaces,
 -- équipements réseau, VLAN, sous-réseaux et adresses IP.
 
@@ -136,9 +124,7 @@ LEFT JOIN VLAN v
     ON sr.id_vlan = v.id_vlan;
 
 
--- ============================================================
 -- 5. Vue des interfaces des matériels
--- ============================================================
 -- Cette vue complète la vue réseau en affichant les interfaces
 -- rattachées aux matériels utilisateurs.
 
@@ -167,9 +153,7 @@ LEFT JOIN ADRESSE_IP ip
     ON ip.id_interface = ir.id_interface;
 
 
--- ============================================================
 -- 6. Vue des connexions réseau actives
--- ============================================================
 -- Cette vue permet de reconstituer les liaisons entre interfaces.
 
 CREATE OR REPLACE VIEW V_CONNEXIONS_ACTIVES AS
@@ -191,9 +175,7 @@ JOIN INTERFACE_RESEAU ib
 WHERE c.active = '1';
 
 
--- ============================================================
 -- 7. Vue des adresses IP par site
--- ============================================================
 -- Cette vue permet d'identifier rapidement les IP utilisées
 -- sur chaque site, notamment pour détecter les conflits.
 
@@ -220,9 +202,7 @@ LEFT JOIN INTERFACE_RESEAU ir
     ON ip.id_interface = ir.id_interface;
 
 
--- ============================================================
 -- 8. Vue globale du parc CY Tech
--- ============================================================
 -- Cette vue sert de base à une vision consolidée Cergy + Pau.
 -- Elle sera aussi utile pour la partie BDDR.
 

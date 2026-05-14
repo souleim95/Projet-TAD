@@ -1,14 +1,8 @@
--- ============================================================
--- Mini-projet GLPI CY Tech
--- Fichier : 05_plsql.sql
 -- Objectif : automatisation et contrôle de cohérence avec PL/SQL
 -- Contenu : triggers, procédures, fonctions et curseurs
--- ============================================================
 
 
--- ============================================================
 -- 1. TRIGGER : mise à jour automatique de la date de modification
--- ============================================================
 -- Lorsqu'un matériel est modifié, la colonne date_modification
 -- est automatiquement renseignée.
 
@@ -21,9 +15,7 @@ END;
 /
 
 
--- ============================================================
 -- 2. TRIGGER : historisation des changements d'affectation
--- ============================================================
 -- Lorsqu'un matériel change de responsable, l'ancienne affectation
 -- est historisée dans HISTO_AFFECTATION.
 
@@ -50,9 +42,7 @@ END;
 /
 
 
--- ============================================================
 -- 3. TRIGGER : contrôle de cohérence entre matériel et site utilisateur
--- ============================================================
 -- Un matériel ne peut être affecté qu'à un utilisateur du même site.
 -- Exemple : un matériel de Cergy ne doit pas être affecté à un utilisateur de Pau.
 
@@ -78,9 +68,7 @@ END;
 /
 
 
--- ============================================================
 -- 4. TRIGGER : contrôle de cohérence VLAN / sous-réseau / site
--- ============================================================
 -- Un sous-réseau doit appartenir au même site que son VLAN.
 
 CREATE OR REPLACE TRIGGER trg_check_sous_reseau_site
@@ -104,9 +92,7 @@ END;
 /
 
 
--- ============================================================
 -- 5. PROCEDURE : affecter un matériel à un utilisateur
--- ============================================================
 -- Cette procédure affecte un matériel à un utilisateur.
 -- Elle met aussi le statut du matériel à AFFECTE.
 
@@ -145,9 +131,7 @@ END;
 /
 
 
--- ============================================================
 -- 6. PROCEDURE : libérer un matériel
--- ============================================================
 -- Cette procédure retire l'utilisateur responsable du matériel
 -- et remet le matériel en stock.
 
@@ -166,9 +150,7 @@ END;
 /
 
 
--- ============================================================
 -- 7. FONCTION : compter les matériels d'un site
--- ============================================================
 -- Retourne le nombre de matériels rattachés à un site.
 
 CREATE OR REPLACE FUNCTION nb_materiels_site (
@@ -188,9 +170,7 @@ END;
 /
 
 
--- ============================================================
 -- 8. FONCTION : compter les matériels par site et statut
--- ============================================================
 -- Exemple : nombre de matériels EN_SERVICE à Cergy.
 
 CREATE OR REPLACE FUNCTION nb_materiels_site_statut (
@@ -212,9 +192,7 @@ END;
 /
 
 
--- ============================================================
 -- 9. FONCTION : vérifier si une adresse IP est disponible
--- ============================================================
 -- Retourne 1 si l'adresse IP est disponible, 0 sinon.
 
 CREATE OR REPLACE FUNCTION ip_disponible (
@@ -239,9 +217,7 @@ END;
 /
 
 
--- ============================================================
 -- 10. PROCEDURE : afficher les IP actives d'un site avec un curseur
--- ============================================================
 -- Cette procédure illustre l'utilisation d'un curseur explicite.
 -- Elle parcourt les IP actives d'un site et les affiche avec DBMS_OUTPUT.
 
@@ -277,9 +253,7 @@ END;
 /
 
 
--- ============================================================
 -- 11. PROCEDURE : contrôle des incohérences réseau avec curseur
--- ============================================================
 -- Cette procédure vérifie les incohérences entre les sites des VLAN
 -- et les sites des sous-réseaux.
 
@@ -320,9 +294,7 @@ END;
 /
 
 
--- ============================================================
 -- 12. PROCEDURE : synthèse du parc par site avec curseur
--- ============================================================
 -- Cette procédure affiche le nombre de matériels par site et par statut.
 
 CREATE OR REPLACE PROCEDURE synthese_parc_par_site

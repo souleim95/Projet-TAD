@@ -1,13 +1,7 @@
--- ============================================================
--- Mini-projet GLPI CY Tech
--- Fichier : 03_indexes.sql
 -- Objectif : création des index de performance
--- ============================================================
 
 
--- ============================================================
 -- 1. INDEX SUR LES UTILISATEURS ET LES DROITS
--- ============================================================
 
 -- Recherche rapide des utilisateurs actifs ou inactifs par site
 CREATE INDEX idx_user_site_statut
@@ -27,9 +21,7 @@ ON USER_ROLE_SITE(id_user)
 TABLESPACE TS_INDEX;
 
 
--- ============================================================
 -- 2. INDEX SUR LES LOCALISATIONS
--- ============================================================
 
 -- Recherche des salles et bâtiments par site
 CREATE INDEX idx_localisation_site_batiment_salle
@@ -37,9 +29,7 @@ ON LOCALISATION(id_site, batiment, salle)
 TABLESPACE TS_INDEX;
 
 
--- ============================================================
 -- 3. INDEX SUR LES MATERIELS
--- ============================================================
 
 -- Index principal pour les requêtes de parc :
 -- exemple : tous les ordinateurs actifs de Cergy
@@ -60,9 +50,7 @@ ON MATERIEL(id_localisation)
 TABLESPACE TS_INDEX;
 
 
--- ============================================================
 -- 4. INDEX SUR L'HISTORIQUE DES AFFECTATIONS
--- ============================================================
 
 -- Historique des affectations d'un matériel
 CREATE INDEX idx_histo_materiel_date
@@ -82,9 +70,7 @@ ON HISTO_AFFECTATION(id_site, date_debut)
 TABLESPACE TS_INDEX;
 
 
--- ============================================================
 -- 5. INDEX SUR LES EQUIPEMENTS RESEAU
--- ============================================================
 
 -- Recherche des équipements réseau par site et par type
 CREATE INDEX idx_equipement_site_type
@@ -92,9 +78,7 @@ ON EQUIPEMENT_RESEAU(id_site, type_equipement)
 TABLESPACE TS_INDEX;
 
 
--- ============================================================
 -- 6. INDEX SUR LES INTERFACES RESEAU
--- ============================================================
 
 -- Recherche des interfaces rattachées à un matériel
 CREATE INDEX idx_interface_materiel
@@ -108,9 +92,7 @@ ON INTERFACE_RESEAU(id_equipement)
 TABLESPACE TS_INDEX;
 
 
--- ============================================================
 -- 7. INDEX SUR LES VLAN ET SOUS-RESEAUX
--- ============================================================
 
 -- Recherche des VLAN par site
 CREATE INDEX idx_vlan_site
@@ -124,9 +106,7 @@ ON SOUS_RESEAU(id_site, id_vlan)
 TABLESPACE TS_INDEX;
 
 
--- ============================================================
 -- 8. INDEX SUR LES ADRESSES IP
--- ============================================================
 
 -- Recherche rapide des adresses IP dans un sous-réseau
 CREATE INDEX idx_ip_sous_reseau_adresse
@@ -146,9 +126,7 @@ ON ADRESSE_IP(active)
 TABLESPACE TS_INDEX;
 
 
--- ============================================================
 -- 9. INDEX SUR LES CONNEXIONS RESEAU
--- ============================================================
 
 -- Recherche des connexions actives depuis l'interface A
 CREATE INDEX idx_connexion_interface_a_active

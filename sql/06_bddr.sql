@@ -1,14 +1,8 @@
--- ============================================================
--- Mini-projet GLPI CY Tech
--- Fichier : 06_bddr.sql
 -- Objectif : simulation de la logique Bases de Données Réparties
 -- Sites concernés : Cergy et Pau
--- ============================================================
 
 
--- ============================================================
 -- 1. PRINCIPE GENERAL
--- ============================================================
 -- La clé de fragmentation est id_site.
 --
 -- Hypothèse :
@@ -26,12 +20,9 @@
 -- s'appuyer sur des DATABASE LINKS :
 -- CERGY_DB_LINK et PAU_DB_LINK.
 -- Ici, on simule la répartition avec des vues filtrées par id_site.
--- ============================================================
 
 
--- ============================================================
 -- 2. FRAGMENTS DU SITE DE CERGY
--- ============================================================
 
 CREATE OR REPLACE VIEW V_UTILISATEURS_CERGY AS
 SELECT *
@@ -84,9 +75,7 @@ JOIN SOUS_RESEAU sr
 WHERE sr.id_site = 1;
 
 
--- ============================================================
 -- 3. FRAGMENTS DU SITE DE PAU
--- ============================================================
 
 CREATE OR REPLACE VIEW V_UTILISATEURS_PAU AS
 SELECT *
@@ -139,13 +128,10 @@ JOIN SOUS_RESEAU sr
 WHERE sr.id_site = 2;
 
 
--- ============================================================
 -- 4. VUES CONSOLIDEES CERGY + PAU
--- ============================================================
 -- Ces vues donnent une vision globale du parc CY Tech.
 -- Elles permettent à la DSI de consulter l'ensemble des données
 -- sans perdre la logique de fragmentation locale.
--- ============================================================
 
 CREATE OR REPLACE VIEW V_UTILISATEURS_GLOBAL AS
 SELECT *
@@ -195,12 +181,9 @@ SELECT *
 FROM V_IP_PAU;
 
 
--- ============================================================
 -- 5. VUES METIER BDDR
--- ============================================================
 -- Ces vues permettent de consulter les informations opérationnelles
 -- par site ou globalement, tout en conservant une logique répartie.
--- ============================================================
 
 CREATE OR REPLACE VIEW V_PARC_CERGY AS
 SELECT *
@@ -234,16 +217,13 @@ SELECT *
 FROM V_TOPOLOGIE_PAU;
 
 
--- ============================================================
 -- 6. VUES MATERIALISEES OPTIONNELLES
--- ============================================================
 -- Les vues matérialisées accélèrent les tableaux de bord globaux.
 -- Elles sont utiles si les données Cergy/Pau sont consultées souvent
 -- en consolidation.
 --
 -- Attention : selon l'environnement Oracle utilisé, les vues
 -- matérialisées peuvent nécessiter des privilèges supplémentaires.
--- ============================================================
 
 CREATE MATERIALIZED VIEW MV_PARC_GLOBAL
 BUILD IMMEDIATE
@@ -261,13 +241,10 @@ SELECT *
 FROM V_TOPOLOGIE_RESEAU;
 
 
--- ============================================================
 -- 7. SIMULATION DE DATABASE LINKS
--- ============================================================
 -- Cette partie est volontairement commentée.
 -- Elle montre comment la solution pourrait être déployée dans
 -- une vraie architecture Oracle répartie.
--- ============================================================
 
 /*
 -- Exemple théorique de database link vers le site de Cergy
@@ -290,12 +267,9 @@ FROM MATERIEL@PAU_DB_LINK;
 */
 
 
--- ============================================================
 -- 8. GRANTS SUR LES VUES BDDR
--- ============================================================
 -- Les droits sont accordés aux rôles Oracle définis dans
 -- 01_init_oracle.sql.
--- ============================================================
 
 GRANT SELECT ON V_PARC_CERGY TO ROLE_CYTECH_CERGY;
 GRANT SELECT ON V_TOPOLOGIE_CERGY TO ROLE_CYTECH_CERGY;
