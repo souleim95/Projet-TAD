@@ -1,5 +1,5 @@
 -- Objectif : initialisation de l'environnement Oracle
--- Contenu : tablespaces, cluster, utilisateurs Oracle, rôles et privilèges
+-- Contenu : tablespaces, utilisateurs Oracle, rôles et privilèges
 
 
 -- 1. CREATION DES TABLESPACES
@@ -25,23 +25,7 @@ SIZE 30M
 AUTOEXTEND ON;
 
 
--- 2. CREATION DU CLUSTER ORACLE
--- Objectif : regrouper physiquement les données souvent
--- consultées ensemble autour de la clé id_site.
--- Exemple : SITE, LOCALISATION, MATERIEL.
-
-CREATE CLUSTER SITE_MATERIEL_LOCALISATION (
-    id_site NUMBER
-)
-TABLESPACE TS_CERGY_DATA;
-
-
--- Index obligatoire pour utiliser le cluster Oracle
-CREATE INDEX idx_cluster_site
-ON CLUSTER SITE_MATERIEL_LOCALISATION;
-
-
--- 3. CREATION DES ROLES ORACLE
+-- 2. CREATION DES ROLES ORACLE
 -- Ces rôles correspondent aux profils techniques d'accès à la base.
 -- Ils sont différents de la table métier ROLE.
 
@@ -52,7 +36,7 @@ CREATE ROLE ROLE_CYTECH_CERGY;
 CREATE ROLE ROLE_CYTECH_PAU;
 
 
--- 4. CREATION DES UTILISATEURS ORACLE
+-- 3. CREATION DES UTILISATEURS ORACLE
 -- Ces comptes représentent les utilisateurs techniques de la base.
 -- Ils sont différents de la table métier UTILISATEUR.
 
@@ -79,7 +63,7 @@ DEFAULT TABLESPACE TS_CERGY_DATA
 TEMPORARY TABLESPACE TEMP;
 
 
--- 5. PRIVILEGES GENERAUX
+-- 4. PRIVILEGES GENERAUX
 
 GRANT CREATE SESSION TO CYTECH_ADMIN;
 GRANT CREATE SESSION TO CYTECH_CERGY;
@@ -94,9 +78,15 @@ GRANT CREATE PROCEDURE TO CYTECH_ADMIN;
 GRANT CREATE TRIGGER TO CYTECH_ADMIN;
 GRANT CREATE SEQUENCE TO CYTECH_ADMIN;
 GRANT CREATE MATERIALIZED VIEW TO CYTECH_ADMIN;
+GRANT CREATE CLUSTER TO CYTECH_ADMIN;
 
 
--- 6. ATTRIBUTION DES ROLES AUX UTILISATEURS ORACLE
+-- Le cluster Oracle utilisé par LOCALISATION et MATERIEL est créé
+-- dans 02_schema.sql, sous le schéma CYTECH_ADMIN. Cela évite de
+-- créer le cluster dans le schéma SYS/SYSTEM lors de l'initialisation.
+
+
+-- 5. ATTRIBUTION DES ROLES AUX UTILISATEURS ORACLE
 
 GRANT ROLE_CYTECH_ADMIN TO CYTECH_ADMIN;
 GRANT ROLE_CYTECH_TECHNICIEN TO CYTECH_ADMIN;

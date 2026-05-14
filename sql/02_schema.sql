@@ -1,8 +1,23 @@
 -- Objectif : création du schéma relationnel de la base cible
--- Contenu : tables, clés primaires, clés étrangères, contraintes UNIQUE et CHECK
+-- Contenu : cluster applicatif, tables, clés primaires, clés étrangères,
+-- contraintes UNIQUE/CHECK et données de référence minimales
 
 
 -- 1. TABLES DE REFERENCE ET ORGANISATION
+
+-- Cluster Oracle créé dans le schéma applicatif CYTECH_ADMIN.
+-- Les tables LOCALISATION et MATERIEL l'utilisent via la clé id_site.
+CREATE CLUSTER SITE_MATERIEL_LOCALISATION (
+    id_site NUMBER
+)
+TABLESPACE TS_CERGY_DATA;
+
+
+-- Index obligatoire pour utiliser le cluster Oracle.
+CREATE INDEX idx_cluster_site
+ON CLUSTER SITE_MATERIEL_LOCALISATION
+TABLESPACE TS_INDEX;
+
 
 CREATE TABLE SITE (
     id_site NUMBER GENERATED ALWAYS AS IDENTITY,
@@ -25,6 +40,28 @@ CREATE TABLE ROLE (
     CONSTRAINT pk_role PRIMARY KEY (id_role),
     CONSTRAINT uk_role_code UNIQUE (code_role)
 ) TABLESPACE TS_CERGY_DATA;
+
+
+-- Données de référence minimales nécessaires à la logique BDDR.
+-- Les vues de 06_bddr.sql supposent explicitement :
+--   id_site = 1 pour Cergy
+--   id_site = 2 pour Pau
+INSERT INTO SITE (code_site, nom, ville, actif)
+VALUES ('CERGY', 'CY Tech Cergy', 'Cergy', '1');
+
+INSERT INTO SITE (code_site, nom, ville, actif)
+VALUES ('PAU', 'CY Tech Pau', 'Pau', '1');
+
+INSERT INTO ROLE (code_role, libelle)
+VALUES ('ADMIN', 'Administrateur');
+
+INSERT INTO ROLE (code_role, libelle)
+VALUES ('TECHNICIEN', 'Technicien');
+
+INSERT INTO ROLE (code_role, libelle)
+VALUES ('LECTURE', 'Lecture seule');
+
+COMMIT;
 
 
 CREATE TABLE LOCALISATION (

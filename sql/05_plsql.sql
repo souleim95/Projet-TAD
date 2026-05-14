@@ -22,7 +22,13 @@ END;
 CREATE OR REPLACE TRIGGER trg_histo_affectation
 AFTER UPDATE OF id_user_responsable ON MATERIEL
 FOR EACH ROW
-WHEN (OLD.id_user_responsable IS NOT NULL)
+WHEN (
+    OLD.id_user_responsable IS NOT NULL
+    AND (
+        NEW.id_user_responsable IS NULL
+        OR OLD.id_user_responsable <> NEW.id_user_responsable
+    )
+)
 BEGIN
     INSERT INTO HISTO_AFFECTATION (
         id_materiel,
@@ -35,7 +41,7 @@ BEGIN
         :OLD.id_materiel,
         :OLD.id_user_responsable,
         :OLD.id_site,
-        NVL(:OLD.date_creation, SYSDATE),
+        NVL(:OLD.date_modification, NVL(:OLD.date_creation, SYSDATE)),
         SYSDATE
     );
 END;
@@ -68,7 +74,32 @@ END;
 /
 
 
--- 4. TRIGGER : contrôle de cohérence VLAN / sous-réseau / site
+-- 4. TRIGGER : contrôle de cohérence matériel / localisation / site
+-- Une localisation rattachée à un matériel doit appartenir au même site.
+
+CREATE OR REPLACE TRIGGER trg_check_materiel_localisation_site
+BEFORE INSERT OR UPDATE OF id_site, id_localisation ON MATERIEL
+FOR EACH ROW
+WHEN (NEW.id_localisation IS NOT NULL)
+DECLARE
+    v_site_localisation LOCALISATION.id_site%TYPE;
+BEGIN
+    SELECT id_site
+    INTO v_site_localisation
+    FROM LOCALISATION
+    WHERE id_localisation = :NEW.id_localisation;
+
+    IF v_site_localisation <> :NEW.id_site THEN
+        RAISE_APPLICATION_ERROR(
+            -20004,
+            'Incohérence : le matériel et sa localisation ne sont pas rattachés au même site.'
+        );
+    END IF;
+END;
+/
+
+
+-- 5. TRIGGER : contrôle de cohérence VLAN / sous-réseau / site
 -- Un sous-réseau doit appartenir au même site que son VLAN.
 
 CREATE OR REPLACE TRIGGER trg_check_sous_reseau_site
@@ -92,7 +123,42 @@ END;
 /
 
 
--- 5. PROCEDURE : affecter un matériel à un utilisateur
+-- 6. TRIGGER : contrôle de cohérence IP / interface / sous-réseau
+-- Une IP associée à une interface doit appartenir au même site que cette interface.
+
+CREATE OR REPLACE TRIGGER trg_check_ip_interface_site
+BEFORE INSERT OR UPDATE OF id_sous_reseau, id_interface ON ADRESSE_IP
+FOR EACH ROW
+WHEN (NEW.id_interface IS NOT NULL)
+DECLARE
+    v_site_sous_reseau SOUS_RESEAU.id_site%TYPE;
+    v_site_interface SITE.id_site%TYPE;
+BEGIN
+    SELECT id_site
+    INTO v_site_sous_reseau
+    FROM SOUS_RESEAU
+    WHERE id_sous_reseau = :NEW.id_sous_reseau;
+
+    SELECT COALESCE(m.id_site, er.id_site)
+    INTO v_site_interface
+    FROM INTERFACE_RESEAU ir
+    LEFT JOIN MATERIEL m
+        ON ir.id_materiel = m.id_materiel
+    LEFT JOIN EQUIPEMENT_RESEAU er
+        ON ir.id_equipement = er.id_equipement
+    WHERE ir.id_interface = :NEW.id_interface;
+
+    IF v_site_interface <> v_site_sous_reseau THEN
+        RAISE_APPLICATION_ERROR(
+            -20005,
+            'Incohérence : l adresse IP et l interface ne sont pas rattachées au même site.'
+        );
+    END IF;
+END;
+/
+
+
+-- 7. PROCEDURE : affecter un matériel à un utilisateur
 -- Cette procédure affecte un matériel à un utilisateur.
 -- Elle met aussi le statut du matériel à AFFECTE.
 
@@ -131,7 +197,7 @@ END;
 /
 
 
--- 6. PROCEDURE : libérer un matériel
+-- 8. PROCEDURE : libérer un matériel
 -- Cette procédure retire l'utilisateur responsable du matériel
 -- et remet le matériel en stock.
 
@@ -150,7 +216,7 @@ END;
 /
 
 
--- 7. FONCTION : compter les matériels d'un site
+-- 9. FONCTION : compter les matériels d'un site
 -- Retourne le nombre de matériels rattachés à un site.
 
 CREATE OR REPLACE FUNCTION nb_materiels_site (
@@ -170,7 +236,7 @@ END;
 /
 
 
--- 8. FONCTION : compter les matériels par site et statut
+-- 10. FONCTION : compter les matériels par site et statut
 -- Exemple : nombre de matériels EN_SERVICE à Cergy.
 
 CREATE OR REPLACE FUNCTION nb_materiels_site_statut (
@@ -192,7 +258,7 @@ END;
 /
 
 
--- 9. FONCTION : vérifier si une adresse IP est disponible
+-- 11. FONCTION : vérifier si une adresse IP est disponible
 -- Retourne 1 si l'adresse IP est disponible, 0 sinon.
 
 CREATE OR REPLACE FUNCTION ip_disponible (
@@ -217,7 +283,7 @@ END;
 /
 
 
--- 10. PROCEDURE : afficher les IP actives d'un site avec un curseur
+-- 12. PROCEDURE : afficher les IP actives d'un site avec un curseur
 -- Cette procédure illustre l'utilisation d'un curseur explicite.
 -- Elle parcourt les IP actives d'un site et les affiche avec DBMS_OUTPUT.
 
@@ -253,7 +319,7 @@ END;
 /
 
 
--- 11. PROCEDURE : contrôle des incohérences réseau avec curseur
+-- 13. PROCEDURE : contrôle des incohérences réseau avec curseur
 -- Cette procédure vérifie les incohérences entre les sites des VLAN
 -- et les sites des sous-réseaux.
 
@@ -294,7 +360,7 @@ END;
 /
 
 
--- 12. PROCEDURE : synthèse du parc par site avec curseur
+-- 14. PROCEDURE : synthèse du parc par site avec curseur
 -- Cette procédure affiche le nombre de matériels par site et par statut.
 
 CREATE OR REPLACE PROCEDURE synthese_parc_par_site
