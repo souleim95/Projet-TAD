@@ -80,6 +80,7 @@ DECLARE
     v_type_materiel     VARCHAR2(40);
     v_type_equipement   VARCHAR2(50);
     v_active            CHAR(1);
+    v_mac               VARCHAR2(17);
     v_if_cergy_count    NUMBER := 0;
     v_if_pau_count      NUMBER := 0;
     v_vlan_index        NUMBER;
@@ -294,8 +295,10 @@ BEGIN
         RETURNING id_materiel INTO v_new_id;
         v_materiels_cergy(i) := v_new_id;
 
+        v_mac := mac_addr(1, i);
+
         INSERT INTO INTERFACE_RESEAU (nom, mac, debit_mbps, mtu, id_materiel)
-        VALUES ('eth0', mac_addr(1, i), 1000, 1500, v_materiels_cergy(i))
+        VALUES ('eth0', v_mac, 1000, 1500, v_materiels_cergy(i))
         RETURNING id_interface INTO v_if_id;
 
         v_if_cergy_count := v_if_cergy_count + 1;
@@ -332,8 +335,10 @@ BEGIN
         RETURNING id_materiel INTO v_new_id;
         v_materiels_pau(i) := v_new_id;
 
+        v_mac := mac_addr(2, i);
+
         INSERT INTO INTERFACE_RESEAU (nom, mac, debit_mbps, mtu, id_materiel)
-        VALUES ('eth0', mac_addr(2, i), 1000, 1500, v_materiels_pau(i))
+        VALUES ('eth0', v_mac, 1000, 1500, v_materiels_pau(i))
         RETURNING id_interface INTO v_if_id;
 
         v_if_pau_count := v_if_pau_count + 1;
@@ -342,10 +347,12 @@ BEGIN
 
     FOR i IN 1..30 LOOP
         FOR p IN 1..4 LOOP
+            v_mac := mac_addr(1, 100000 + (i * 10) + p);
+
             INSERT INTO INTERFACE_RESEAU (nom, mac, debit_mbps, mtu, id_equipement)
             VALUES (
                 'Gi0/' || p,
-                mac_addr(1, 100000 + (i * 10) + p),
+                v_mac,
                 1000,
                 1500,
                 v_equipements_cergy(i)
@@ -355,10 +362,12 @@ BEGIN
             v_if_cergy_count := v_if_cergy_count + 1;
             v_interfaces_cergy(v_if_cergy_count) := v_if_id;
 
+            v_mac := mac_addr(2, 100000 + (i * 10) + p);
+
             INSERT INTO INTERFACE_RESEAU (nom, mac, debit_mbps, mtu, id_equipement)
             VALUES (
                 'Gi0/' || p,
-                mac_addr(2, 100000 + (i * 10) + p),
+                v_mac,
                 1000,
                 1500,
                 v_equipements_pau(i)
