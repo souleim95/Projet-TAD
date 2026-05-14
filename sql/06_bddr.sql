@@ -1,0 +1,322 @@
+-- ============================================================
+-- Mini-projet GLPI CY Tech
+-- Fichier : 06_bddr.sql
+-- Objectif : simulation de la logique Bases de Données Réparties
+-- Sites concernés : Cergy et Pau
+-- ============================================================
+
+
+-- ============================================================
+-- 1. PRINCIPE GENERAL
+-- ============================================================
+-- La clé de fragmentation est id_site.
+--
+-- Hypothèse :
+-- id_site = 1 correspond au site de Cergy
+-- id_site = 2 correspond au site de Pau
+--
+-- Les tables volumineuses sont fragmentées horizontalement :
+-- UTILISATEUR, MATERIEL, LOCALISATION, EQUIPEMENT_RESEAU,
+-- VLAN, SOUS_RESEAU, ADRESSE_IP, HISTO_AFFECTATION.
+--
+-- Les petites tables de référence sont répliquées :
+-- SITE, ROLE.
+--
+-- Dans un vrai environnement Oracle réparti, les vues pourraient
+-- s'appuyer sur des DATABASE LINKS :
+-- CERGY_DB_LINK et PAU_DB_LINK.
+-- Ici, on simule la répartition avec des vues filtrées par id_site.
+-- ============================================================
+
+
+-- ============================================================
+-- 2. FRAGMENTS DU SITE DE CERGY
+-- ============================================================
+
+CREATE OR REPLACE VIEW V_UTILISATEURS_CERGY AS
+SELECT *
+FROM UTILISATEUR
+WHERE id_site = 1;
+
+
+CREATE OR REPLACE VIEW V_LOCALISATIONS_CERGY AS
+SELECT *
+FROM LOCALISATION
+WHERE id_site = 1;
+
+
+CREATE OR REPLACE VIEW V_MATERIEL_CERGY AS
+SELECT *
+FROM MATERIEL
+WHERE id_site = 1;
+
+
+CREATE OR REPLACE VIEW V_HISTO_AFFECTATION_CERGY AS
+SELECT *
+FROM HISTO_AFFECTATION
+WHERE id_site = 1;
+
+
+CREATE OR REPLACE VIEW V_EQUIPEMENTS_RESEAU_CERGY AS
+SELECT *
+FROM EQUIPEMENT_RESEAU
+WHERE id_site = 1;
+
+
+CREATE OR REPLACE VIEW V_VLAN_CERGY AS
+SELECT *
+FROM VLAN
+WHERE id_site = 1;
+
+
+CREATE OR REPLACE VIEW V_SOUS_RESEAUX_CERGY AS
+SELECT *
+FROM SOUS_RESEAU
+WHERE id_site = 1;
+
+
+CREATE OR REPLACE VIEW V_IP_CERGY AS
+SELECT
+    ip.*
+FROM ADRESSE_IP ip
+JOIN SOUS_RESEAU sr
+    ON ip.id_sous_reseau = sr.id_sous_reseau
+WHERE sr.id_site = 1;
+
+
+-- ============================================================
+-- 3. FRAGMENTS DU SITE DE PAU
+-- ============================================================
+
+CREATE OR REPLACE VIEW V_UTILISATEURS_PAU AS
+SELECT *
+FROM UTILISATEUR
+WHERE id_site = 2;
+
+
+CREATE OR REPLACE VIEW V_LOCALISATIONS_PAU AS
+SELECT *
+FROM LOCALISATION
+WHERE id_site = 2;
+
+
+CREATE OR REPLACE VIEW V_MATERIEL_PAU AS
+SELECT *
+FROM MATERIEL
+WHERE id_site = 2;
+
+
+CREATE OR REPLACE VIEW V_HISTO_AFFECTATION_PAU AS
+SELECT *
+FROM HISTO_AFFECTATION
+WHERE id_site = 2;
+
+
+CREATE OR REPLACE VIEW V_EQUIPEMENTS_RESEAU_PAU AS
+SELECT *
+FROM EQUIPEMENT_RESEAU
+WHERE id_site = 2;
+
+
+CREATE OR REPLACE VIEW V_VLAN_PAU AS
+SELECT *
+FROM VLAN
+WHERE id_site = 2;
+
+
+CREATE OR REPLACE VIEW V_SOUS_RESEAUX_PAU AS
+SELECT *
+FROM SOUS_RESEAU
+WHERE id_site = 2;
+
+
+CREATE OR REPLACE VIEW V_IP_PAU AS
+SELECT
+    ip.*
+FROM ADRESSE_IP ip
+JOIN SOUS_RESEAU sr
+    ON ip.id_sous_reseau = sr.id_sous_reseau
+WHERE sr.id_site = 2;
+
+
+-- ============================================================
+-- 4. VUES CONSOLIDEES CERGY + PAU
+-- ============================================================
+-- Ces vues donnent une vision globale du parc CY Tech.
+-- Elles permettent à la DSI de consulter l'ensemble des données
+-- sans perdre la logique de fragmentation locale.
+-- ============================================================
+
+CREATE OR REPLACE VIEW V_UTILISATEURS_GLOBAL AS
+SELECT *
+FROM V_UTILISATEURS_CERGY
+UNION ALL
+SELECT *
+FROM V_UTILISATEURS_PAU;
+
+
+CREATE OR REPLACE VIEW V_MATERIEL_GLOBAL AS
+SELECT *
+FROM V_MATERIEL_CERGY
+UNION ALL
+SELECT *
+FROM V_MATERIEL_PAU;
+
+
+CREATE OR REPLACE VIEW V_EQUIPEMENTS_RESEAU_GLOBAL AS
+SELECT *
+FROM V_EQUIPEMENTS_RESEAU_CERGY
+UNION ALL
+SELECT *
+FROM V_EQUIPEMENTS_RESEAU_PAU;
+
+
+CREATE OR REPLACE VIEW V_VLAN_GLOBAL AS
+SELECT *
+FROM V_VLAN_CERGY
+UNION ALL
+SELECT *
+FROM V_VLAN_PAU;
+
+
+CREATE OR REPLACE VIEW V_SOUS_RESEAUX_GLOBAL AS
+SELECT *
+FROM V_SOUS_RESEAUX_CERGY
+UNION ALL
+SELECT *
+FROM V_SOUS_RESEAUX_PAU;
+
+
+CREATE OR REPLACE VIEW V_IP_GLOBAL AS
+SELECT *
+FROM V_IP_CERGY
+UNION ALL
+SELECT *
+FROM V_IP_PAU;
+
+
+-- ============================================================
+-- 5. VUES METIER BDDR
+-- ============================================================
+-- Ces vues permettent de consulter les informations opérationnelles
+-- par site ou globalement, tout en conservant une logique répartie.
+-- ============================================================
+
+CREATE OR REPLACE VIEW V_PARC_CERGY AS
+SELECT *
+FROM V_PARC_SITE
+WHERE id_site = 1;
+
+
+CREATE OR REPLACE VIEW V_PARC_PAU AS
+SELECT *
+FROM V_PARC_SITE
+WHERE id_site = 2;
+
+
+CREATE OR REPLACE VIEW V_TOPOLOGIE_CERGY AS
+SELECT *
+FROM V_TOPOLOGIE_RESEAU
+WHERE id_site = 1;
+
+
+CREATE OR REPLACE VIEW V_TOPOLOGIE_PAU AS
+SELECT *
+FROM V_TOPOLOGIE_RESEAU
+WHERE id_site = 2;
+
+
+CREATE OR REPLACE VIEW V_TOPOLOGIE_GLOBAL AS
+SELECT *
+FROM V_TOPOLOGIE_CERGY
+UNION ALL
+SELECT *
+FROM V_TOPOLOGIE_PAU;
+
+
+-- ============================================================
+-- 6. VUES MATERIALISEES OPTIONNELLES
+-- ============================================================
+-- Les vues matérialisées accélèrent les tableaux de bord globaux.
+-- Elles sont utiles si les données Cergy/Pau sont consultées souvent
+-- en consolidation.
+--
+-- Attention : selon l'environnement Oracle utilisé, les vues
+-- matérialisées peuvent nécessiter des privilèges supplémentaires.
+-- ============================================================
+
+CREATE MATERIALIZED VIEW MV_PARC_GLOBAL
+BUILD IMMEDIATE
+REFRESH COMPLETE ON DEMAND
+AS
+SELECT *
+FROM V_PARC_SITE;
+
+
+CREATE MATERIALIZED VIEW MV_TOPOLOGIE_GLOBAL
+BUILD IMMEDIATE
+REFRESH COMPLETE ON DEMAND
+AS
+SELECT *
+FROM V_TOPOLOGIE_RESEAU;
+
+
+-- ============================================================
+-- 7. SIMULATION DE DATABASE LINKS
+-- ============================================================
+-- Cette partie est volontairement commentée.
+-- Elle montre comment la solution pourrait être déployée dans
+-- une vraie architecture Oracle répartie.
+-- ============================================================
+
+/*
+-- Exemple théorique de database link vers le site de Cergy
+CREATE DATABASE LINK CERGY_DB_LINK
+CONNECT TO CYTECH_CERGY IDENTIFIED BY cergy123
+USING 'CERGY_DB';
+
+-- Exemple théorique de database link vers le site de Pau
+CREATE DATABASE LINK PAU_DB_LINK
+CONNECT TO CYTECH_PAU IDENTIFIED BY pau123
+USING 'PAU_DB';
+
+-- Exemple de vue globale réellement répartie
+CREATE OR REPLACE VIEW V_MATERIEL_GLOBAL_REPARTI AS
+SELECT *
+FROM MATERIEL@CERGY_DB_LINK
+UNION ALL
+SELECT *
+FROM MATERIEL@PAU_DB_LINK;
+*/
+
+
+-- ============================================================
+-- 8. GRANTS SUR LES VUES BDDR
+-- ============================================================
+-- Les droits sont accordés aux rôles Oracle définis dans
+-- 01_init_oracle.sql.
+-- ============================================================
+
+GRANT SELECT ON V_PARC_CERGY TO ROLE_CYTECH_CERGY;
+GRANT SELECT ON V_TOPOLOGIE_CERGY TO ROLE_CYTECH_CERGY;
+GRANT SELECT ON V_UTILISATEURS_CERGY TO ROLE_CYTECH_CERGY;
+GRANT SELECT ON V_MATERIEL_CERGY TO ROLE_CYTECH_CERGY;
+GRANT SELECT ON V_IP_CERGY TO ROLE_CYTECH_CERGY;
+
+
+GRANT SELECT ON V_PARC_PAU TO ROLE_CYTECH_PAU;
+GRANT SELECT ON V_TOPOLOGIE_PAU TO ROLE_CYTECH_PAU;
+GRANT SELECT ON V_UTILISATEURS_PAU TO ROLE_CYTECH_PAU;
+GRANT SELECT ON V_MATERIEL_PAU TO ROLE_CYTECH_PAU;
+GRANT SELECT ON V_IP_PAU TO ROLE_CYTECH_PAU;
+
+
+GRANT SELECT ON V_PARC_GLOBAL TO ROLE_CYTECH_ADMIN;
+GRANT SELECT ON V_TOPOLOGIE_GLOBAL TO ROLE_CYTECH_ADMIN;
+GRANT SELECT ON V_UTILISATEURS_GLOBAL TO ROLE_CYTECH_ADMIN;
+GRANT SELECT ON V_MATERIEL_GLOBAL TO ROLE_CYTECH_ADMIN;
+GRANT SELECT ON V_IP_GLOBAL TO ROLE_CYTECH_ADMIN;
+
+
+GRANT SELECT ON MV_PARC_GLOBAL TO ROLE_CYTECH_ADMIN;
+GRANT SELECT ON MV_TOPOLOGIE_GLOBAL TO ROLE_CYTECH_ADMIN;
