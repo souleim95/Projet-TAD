@@ -324,7 +324,7 @@ AS
 SELECT *
 FROM V_PARC_GLOBAL;
 
--- AJOUT POUR OPTIMISER LES TESTS DE PERFORMANCE :
+-- Index dédié aux tests de performance sur la vue matérialisée.
 CREATE INDEX idx_mv_parc_statut ON MV_PARC_GLOBAL(statut_materiel) TABLESPACE TS_INDEX;
 
 BEGIN

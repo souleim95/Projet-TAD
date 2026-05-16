@@ -16,5 +16,5 @@ CONNECT CYTECH_ADMIN/admin123
 @@06_bddr.sql
 @@07_test_data.sql
 @@08_performance_tests.sql
-
+@@10_performance_comparison.sql
 SET ECHO OFF;
