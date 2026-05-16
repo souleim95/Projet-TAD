@@ -7,7 +7,8 @@ Mini-projet SIE 2026 - Refonte d'une partie de la base GLPI pour le parc informa
 ```text
 docs/
   MiniProjetSIE2026.pdf
-  Reverse_engineering_GLPI_CYTech.pdf
+  Rapport.docx
+  Rapport.pdf
 
 sql/
   01_init_oracle.sql
