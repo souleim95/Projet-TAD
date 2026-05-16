@@ -24,7 +24,7 @@ DATAFILE 'histo_data.dbf'
 SIZE 30M
 AUTOEXTEND ON;
 
-
+ALTER SESSION SET "_ORACLE_SCRIPT"=true;
 -- 2. CREATION DES ROLES ORACLE
 -- Ces rôles correspondent aux profils techniques d'accès à la base.
 -- Ils sont différents de la table métier ROLE.
